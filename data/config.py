@@ -172,7 +172,33 @@ pascal_sbd_dataset = dataset_base.copy({
     'class_names': PASCAL_CLASSES,
 })
 
+# MICRO_CLASSES = ("microcontroller", "Arduino", "Arduino_Nano", "ESP8266", "Heltec", "Raspberry")
+MICRO_CLASSES = ('Arduino', 'Arduino_Nano', 'ESP8266', 'Heltec', 'Heltec_ESP32_Lora', 'Raspberry', 'Raspberry_Pi_3')
+micro_dataset = dataset_base.copy({
+    'name': 'Microcontroller',
 
+    'train_images': './data/microcontroller/train',
+    'valid_images': './data/microcontroller/valid',
+    
+    'train_info': './data/microcontroller/train.json',
+    'valid_info': './data/microcontroller/valid.json',
+
+    'class_names': MICRO_CLASSES,
+})
+
+ROADLANE_CLASSES = ("road-roads", "divider-line", "dotted-line", "double-line", "random-line", "road-sign-line", "solid-line")
+
+roadline_dataset = dataset_base.copy({
+    'name': 'Roadline',
+
+    'train_images': './data/road_lane/train2017',
+    'valid_images': './data/road_lane/test2017',
+    
+    'train_info': './data/road_lane/annotations/instances_train2017.json',
+    'valid_info': './data/road_lane/annotations/instances_val2017.json',
+
+    'class_names': ROADLANE_CLASSES,
+})
 
 
 
@@ -757,6 +783,38 @@ yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
     # Dataset stuff
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+    
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    })
+})
+
+yolact_resnet50_roadline_config = yolact_resnet50_config.copy({
+    'name': None, # Will default to yolact_resnet50_pascal
+    
+    # Dataset stuff
+    'dataset': roadline_dataset,
+    'num_classes': len(roadline_dataset.class_names) + 1,
+
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+    
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    })
+})
+
+yolact_resnet50_micro_config = yolact_resnet50_config.copy({
+    'name': None, # Will default to yolact_resnet50_pascal
+    
+    # Dataset stuff
+    'dataset': micro_dataset,
+    'num_classes': len(micro_dataset.class_names) + 1,
 
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
