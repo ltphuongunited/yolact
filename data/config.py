@@ -186,21 +186,6 @@ micro_dataset = dataset_base.copy({
     'class_names': MICRO_CLASSES,
 })
 
-ROADLANE_CLASSES = ("road-roads", "divider-line", "dotted-line", "double-line", "random-line", "road-sign-line", "solid-line")
-
-roadline_dataset = dataset_base.copy({
-    'name': 'Roadline',
-
-    'train_images': './data/road_lane/train2017',
-    'valid_images': './data/road_lane/test2017',
-    
-    'train_info': './data/road_lane/annotations/instances_train2017.json',
-    'valid_info': './data/road_lane/annotations/instances_val2017.json',
-
-    'class_names': ROADLANE_CLASSES,
-})
-
-
 
 # ----------------------- TRANSFORMS ----------------------- #
 
@@ -729,6 +714,56 @@ yolact_base_config = coco_base_config.copy({
     'use_semantic_segmentation_loss': True,
 })
 
+yolact_base_micro_config = coco_base_config.copy({
+    'name': 'micro_base',
+
+    # Dataset stuff
+    'dataset': micro_dataset,
+    'num_classes': len(micro_dataset.class_names) + 1,
+
+    # Image Size
+    'max_size': 550,
+    
+    # Training params
+    'lr_steps': (280000, 600000, 700000, 750000),
+    'max_iter': 800000,
+    
+    # Backbone Settings
+    'backbone': resnet101_backbone.copy({
+        'selected_layers': list(range(1, 4)),
+        'use_pixel_scales': True,
+        'preapply_sqrt': False,
+        'use_square_anchors': True, # This is for backward compatability with a bug
+
+        'pred_aspect_ratios': [ [[1, 1/2, 2]] ]*5,
+        'pred_scales': [[24], [48], [96], [192], [384]],
+    }),
+
+    # FPN Settings
+    'fpn': fpn_base.copy({
+        'use_conv_downsample': True,
+        'num_downsample': 2,
+    }),
+
+    # Mask Settings
+    'mask_type': mask_type.lincomb,
+    'mask_alpha': 6.125,
+    'mask_proto_src': 0,
+    'mask_proto_net': [(256, 3, {'padding': 1})] * 3 + [(None, -2, {}), (256, 3, {'padding': 1})] + [(32, 1, {})],
+    'mask_proto_normalize_emulate_roi_pooling': True,
+
+    # Other stuff
+    'share_prediction_module': True,
+    'extra_head_net': [(256, 3, {'padding': 1})],
+
+    'positive_iou_threshold': 0.5,
+    'negative_iou_threshold': 0.4,
+
+    'crowd_iou_threshold': 0.7,
+
+    'use_semantic_segmentation_loss': True,
+})
+
 yolact_im400_config = yolact_base_config.copy({
     'name': 'yolact_im400',
 
@@ -793,21 +828,6 @@ yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
     })
 })
 
-yolact_resnet50_roadline_config = yolact_resnet50_config.copy({
-    'name': None, # Will default to yolact_resnet50_pascal
-    
-    # Dataset stuff
-    'dataset': roadline_dataset,
-    'num_classes': len(roadline_dataset.class_names) + 1,
-
-    'max_iter': 120000,
-    'lr_steps': (60000, 100000),
-    
-    'backbone': yolact_resnet50_config.backbone.copy({
-        'pred_scales': [[32], [64], [128], [256], [512]],
-        'use_square_anchors': False,
-    })
-})
 
 yolact_resnet50_micro_config = yolact_resnet50_config.copy({
     'name': None, # Will default to yolact_resnet50_pascal
